@@ -19,7 +19,14 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
+//authentication routes
+$router->post('/register','UserController@register');
+$router->post('/login','UserController@login');
+$router->get('/logout','UserController@logout');
 
+
+
+//Post Routes
 $router->get('/post', 'PostController@index');
 $router->post('/post', 'PostController@store');
 $router->get('/post/{id}', 'PostController@show');

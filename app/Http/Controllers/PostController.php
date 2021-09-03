@@ -19,12 +19,24 @@ class PostController extends Controller
 
     public function index ()
     {
-        $post = Post::all();
-        return response()->json([
-            'success' => true,
-            'message' =>'List Semua Post',
-            'data'    => $post,
-        ], 200);
+        $post = Post::paginate(5);
+        $response = [
+            'pagination' => [
+            'total' => $post->total(),
+            'per_page' => $post->perPage(),
+            'current_page' => $post->currentPage(),
+            'last_page' => $post->lastPage(),
+            'from' => $post->firstItem(),
+            'to' => $post->lastItem()
+            ],
+            'data' => $post
+          ];
+          return response()->json($response);
+        // return response()->json([
+        //     'success' => true,
+        //     'message' =>'List Semua Post',
+        //     'data'    => $post,
+        // ], 200);
     }
 
     public function store (Request $request)
@@ -49,7 +61,7 @@ class PostController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Post Gagal Disimpan!',
+                    'message' => $dataValidation()->error(),
                 ], 400);
             }
 
@@ -95,7 +107,7 @@ class PostController extends Controller
         } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Post Gagal Diupdate!',
+                'message' => $dataValidation()->error(),
             ], 400);
         }
 
