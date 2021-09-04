@@ -2,18 +2,14 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class Post extends Model
 {
-    /**
-     * @var string
-     */
-    protected $table = 'posts';
+    protected $guarded = [];
 
-    /**
-     * @var array
-     */
-    protected $fillable = [
-        'title', 'content',
-    ];
+    public function user ()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

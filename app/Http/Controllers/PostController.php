@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use App\Post;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
@@ -14,12 +14,15 @@ class PostController extends Controller
      */
     public function __construct()
     {
-        //
+        $this->middleware('auth');
     }
 
     public function index ()
     {
-        $post = Post::paginate(5);
+
+        // $user = auth()->user();
+        // $post = $user->posts()->paginate(5);
+        $post = Auth::user()->posts()->paginate(5);
         $response = [
             'pagination' => [
             'total' => $post->total(),
@@ -47,9 +50,10 @@ class PostController extends Controller
         ]);
 
 
-            $post = Post::create([
+            $post = Auth::user()->posts()->create([
                 'title'     => $request->title,
                 'content'   => $request->content,
+
             ]);
 
             if ($post) {
@@ -69,20 +73,26 @@ class PostController extends Controller
 
     public function show ($id)
     {
-        $post = Post::find($id);
+        $post = Post::findOrFail($id);
 
-        if ($post){
-            return response()->json([
-                'success' =>true,
-                'message' =>'Detail Post',
-                'data' =>$post
-            ], 200);
+        if (Auth::user()->id!== $post->user_id){
+            return response()->json(['status'=>'error', 'message'=>'Unauthorized'], 401);
         }
-        return response()->json([
-            'success' =>false,
-            'message' =>'Post tidak ditemukan',
 
-        ],404);
+        return response()->json(['message'=>'success', 'post'=>$post],200);
+
+        // if ($post){
+        //     return response()->json([
+        //         'success' =>true,
+        //         'message' =>'Detail Post',
+        //         'data' =>$post
+        //     ], 200);
+        // }
+        // return response()->json([
+        //     'success' =>false,
+        //     'message' =>'Post tidak ditemukan',
+
+        // ],404);
 
     }
 
@@ -93,41 +103,52 @@ class PostController extends Controller
             'content'=>'required',
         ]);
 
-        $post = Post::whereId($id)->update([
+        // $post = Post::whereId($id)->update([
+        //     'title'     => $request->title,
+        //     'content'   => $request->content,
+        // ]);
+
+        $post = Post::find($id);
+        if (Auth::user()->id!== $post->user_id){
+            return response()->json(['status'=>'error', 'message'=>'Unauthorized'], 401);
+        }
+
+        $post = $post->update([
             'title'     => $request->title,
             'content'   => $request->content,
+
         ]);
 
-        if ($post) {
+        // if ($post) {
             return response()->json([
                 'success' => true,
                 'message' => 'Post Berhasil Diupdate!',
                 'data' => $post
             ], 201);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => $dataValidation()->error(),
-            ], 400);
-        }
+        // } else {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => $dataValidation()->error(),
+        //     ], 400);
+        // }
 
     }
 
     public function destroy ($id)
     {
-        $post = Post::where('id',$id)->delete();
+        // $post = Post::where('id',$id)->delete();
 
-        if($post){
-            return response()->json([
-                'success' => true,
-                'message' => ' Data berhasil dihapus!',
-            ],200);
+        $post = Post::find($id);
+
+        if (Auth::user()->id!== $post->user_id){
+            return response()->json(['status'=>'error', 'message'=>'Unauthorized'],401);
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => ' Data gagal dihapus!',
-        ],400);
+        if(Post::destroy($id)){
+            return response()->json(['status'=>'success', 'message'=>'Post Deleted Successfully']);
+        }
+
+        return response()->json(['status'=>'error', 'message'=>'Something went wrong']);
 
     }
 
